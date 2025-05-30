@@ -4,33 +4,31 @@ from sqlalchemy.ext.declarative import declarative_base
 import os
 from dotenv import load_dotenv
 
-# Загрузка переменных окружения из .env файла
-load_dotenv()
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env"))
 
-# Получение строки подключения из переменной окружения
-# Пример: DATABASE_URL=postgresql://user:password@localhost/dbname
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@localhost/dbname")
+POSTGRES_PORT = os.getenv("POSTGRES_PORT")
+POSTGRES_SERVER = os.getenv("POSTGRES_SERVER")
+POSTGRES_DB = os.getenv("POSTGRES_DB")
+POSTGRES_USER = os.getenv("POSTGRES_USER")
+POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 
-# Создаем движок SQLAlchemy
-# pool_pre_ping=True помогает обрабатывать потерянные соединения с БД
+DATABASE_URL = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_SERVER}:{POSTGRES_PORT}/{POSTGRES_DB}"
+# Асинхронная строка подключения
+
+# Создаем асинхронный движок
 engine = create_engine(
     DATABASE_URL,
-    connect_args={"check_same_thread": False} if DATABASE_URL.startswith("postgresql") else {},
-    pool_pre_ping=True
+    echo=True,  # Log SQL queries
+    pool_pre_ping=True  # Check connections before use
 )
 
-# Создаем фабрику сессий
-SessionLocal = sessionmaker(
-    autocommit=False,
-    autoflush=False,
-    bind=engine
-)
+# Фабрика сессий
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Используем scoped_session для многопоточной безопасности
-# Это гарантирует, что каждая сессия будет уникальна для потока/запроса
+# Многопоточная безопасность
 db_session = scoped_session(SessionLocal)
 
-# Базовый класс для всех моделей
+# Базовый класс для моделей
 Base = declarative_base()
 Base.query = db_session.query_property()
 
@@ -41,6 +39,6 @@ def get_database():
     """
     db = db_session()
     try:
-        yield db  # Используем yield для корректного закрытия сессии после использования
+        yield db
     finally:
         db.close()

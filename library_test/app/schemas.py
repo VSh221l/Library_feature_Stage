@@ -21,35 +21,41 @@ class BookBase(BaseModel):
     isbn: Optional[str] = None
     quantity: int = 1
 
-class BookCreate(BookBase):
-    pass
-
 class Book(BookBase):
     id: int
-    description: Optional[str] = None
-    
     class Config:
         orm_mode = True
+
+class BookCreate(BookBase):
+    title: str
+    author: str
+
+class BookUpdate(BaseModel):
+    title: Optional[str] = None
+    author: Optional[str] = None
+    year: Optional[int] = None
+    isbn: Optional[str] = None
+    quantity: Optional[int] = None
 
 class ReaderBase(BaseModel):
     name: str
     email: str
 
+class Reader(ReaderBase):
+    id: int
+    class Config:
+        orm_mode = True
+
 class ReaderCreate(ReaderBase):
     pass
 
-class Reader(ReaderBase):
-    id: int
-    
-    class Config:
-        orm_mode = True
+class ReaderUpdate(BaseModel):
+    name: Optional[str] = None
+    email: Optional[str] = None
 
 class BorrowBase(BaseModel):
     book_id: int
     reader_id: int
-
-class BorrowCreate(BorrowBase):
-    pass
 
 class Borrow(BorrowBase):
     borrow_date: datetime.date
@@ -58,3 +64,6 @@ class Borrow(BorrowBase):
     
     class Config:
         orm_mode = True
+
+class BorrowCreate(BorrowBase):
+    pass

@@ -17,7 +17,7 @@ class Book(Base):
     year = Column(Integer)
     isbn = Column(String, unique=True, nullable=True)
     quantity = Column(Integer, default=1)
-    # description = Column(String, nullable=True)  # Добавлено через Alembic
+    description = Column(String, nullable=True)  # Добавлено через Alembic
     
 class Reader(Base):
     __tablename__ = "readers"

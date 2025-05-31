@@ -28,4 +28,7 @@ def return_book(borrow_id: int, db: Session = Depends(database.get_database)):
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     
-# 3. Получение списка всех выданных книг (идея для реализации в будущем)
+# 3. Получение списка книг, взятых читателем
+@router.get("/reader/{reader_id}", response_model=list[schemas.Borrow])
+def get_reader_borrowed_books(reader_id: int, db: Session = Depends(database.get_database)):
+    return crud_books.get_reader_borrowed_books(db, reader_id)

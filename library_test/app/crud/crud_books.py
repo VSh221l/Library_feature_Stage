@@ -1,6 +1,6 @@
 from app.models import Book, BorrowedBook
 from sqlalchemy.orm import Session
-from app import schemas
+from app import schemas, models
 from fastapi import HTTPException
 import datetime
 
@@ -104,3 +104,10 @@ def return_book(db: Session, borrow_id: int):
     db.commit()
     db.refresh(borrow_record)
     return borrow_record
+
+def get_reader_borrowed_books(db: Session, reader_id: int):
+    """Получить список книг, взятых читателем"""
+    return db.query(models.BorrowedBook).filter(
+        models.BorrowedBook.reader_id == reader_id,
+        models.BorrowedBook.return_date.is_(None)
+    ).all()

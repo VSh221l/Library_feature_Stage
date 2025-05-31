@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app import schemas, database, auth
-from crud import crud_books
+from app.crud import crud_books
 
 router = APIRouter(
     prefix="/borrow",

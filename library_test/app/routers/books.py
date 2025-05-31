@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from app.crud import crud_books
 from app import schemas, database, auth
-from crud import crud_books
+
 
 # Создаем роутер для книг
 router = APIRouter(

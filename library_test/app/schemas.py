@@ -1,6 +1,13 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from typing import Optional
 import datetime
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+class UserRegister(UserLogin):
+    pass  # Регистрация использует те же поля, что и вход
 
 class UserBase(BaseModel):
     email: str

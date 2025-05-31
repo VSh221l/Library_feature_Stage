@@ -4,6 +4,11 @@ from datetime import datetime, timedelta
 from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
 
+from app.schemas import User
+from app.models import User as UserModel
+from sqlalchemy.orm import Session
+from app.database import get_database
+
 import os
 from dotenv import load_dotenv
 
@@ -29,6 +34,15 @@ def create_access_token(data: dict):
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
+def get_user(db: Session, email: str):
+    return db.query(UserModel).filter(UserModel.email == email).first()
+
+def authenticate_user(db: Session, email: str, password: str):
+    user = get_user(db, email)
+    if not user or not verify_password(password, user.hashed_password):
+        return False
+    return user
+
 async def get_current_user(token: str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -43,4 +57,8 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     except JWTError:
         raise credentials_exception
     # Здесь можно добавить проверку пользователя в БД
+    db = get_database()
+    user = get_user(db, email)
+    if user is None:
+        raise credentials_exception
     return {"email": email}

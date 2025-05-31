@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from app import schemas, database
+from app import schemas, database, auth
 from crud import crud_books
 
 router = APIRouter(
     prefix="/borrow",
-    tags=["Borrowings"]
+    tags=["Borrowings"],
+    dependencies=[Depends(auth.get_current_user)]  # Все эндпоинты требуют JWT
 )
 
 

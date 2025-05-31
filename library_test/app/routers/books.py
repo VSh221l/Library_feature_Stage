@@ -1,12 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from app import schemas, database
+from app import schemas, database, auth
 from crud import crud_books
 
 # Создаем роутер для книг
 router = APIRouter(
     prefix="/books",
-    tags=["Books"]
+    tags=["Books"],
+    dependencies=[Depends(auth.get_current_user)]  # Все эндпоинты требуют JWT
 )
 
 # --- CRUD для книг ---

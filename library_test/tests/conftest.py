@@ -26,6 +26,12 @@ def db():
 @pytest.fixture
 def create_test_user(db):
     from app.auth import get_password_hash
+
+    # Check if the user already exists
+    existing_user = db.query(User).filter(User.email == "test@example.com").first()
+    if existing_user:
+        return existing_user
+
     user = User(email="test@example.com", hashed_password=get_password_hash("password123"))
     db.add(user)
     db.commit()

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, ConfigDict
 from typing import Optional
 import datetime
 
@@ -18,8 +18,7 @@ class UserCreate(UserBase):
 class User(UserBase):
     id: int
     
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 class BookBase(BaseModel):
     title: str
@@ -30,8 +29,7 @@ class BookBase(BaseModel):
 
 class Book(BookBase):
     id: int
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 class BookCreate(BookBase):
     title: str
@@ -50,8 +48,7 @@ class ReaderBase(BaseModel):
 
 class Reader(ReaderBase):
     id: int
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 class ReaderCreate(ReaderBase):
     pass
@@ -69,8 +66,7 @@ class Borrow(BorrowBase):
     return_date: Optional[datetime.date] = None
     return_date: Optional[str] = None
     
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 class BorrowCreate(BorrowBase):
     pass

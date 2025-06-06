@@ -1,4 +1,4 @@
-def test_create_reader(client):
+def test_create_reader(client, create_test_user):
     token = client.post("/auth/token", json={"email": "test@example.com", "password": "password123"}).json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
@@ -11,7 +11,7 @@ def test_create_reader(client):
     assert response.status_code == 400
     assert response.json()["detail"] == "Email уже занят"
 
-def test_update_reader(client, create_test_reader):
+def test_update_reader(client, create_test_user, create_test_reader):
     token = client.post("/auth/token", json={"email": "test@example.com", "password": "password123"}).json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
     
@@ -21,11 +21,11 @@ def test_update_reader(client, create_test_reader):
 
     # Дублирование email
     response = client.post("/readers/", json={"name": "Петр Петров", "email": "another@example.com"}, headers=headers)
-    response = client.put(f"/readers/{response.json()['id']}", json={"email": "ivan@example.com"}, headers=headers)
+    response = client.put(f"/readers/{response.json()['id']}", json={"email": "reader@example.com"}, headers=headers)
     assert response.status_code == 400
     assert "Email уже занят" in response.json()["detail"]
 
-def test_delete_reader(client, create_test_reader):
+def test_delete_reader(client, create_test_reader, create_test_user):
     token = client.post("/auth/token", json={"email": "test@example.com", "password": "password123"}).json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
     

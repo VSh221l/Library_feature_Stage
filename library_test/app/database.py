@@ -31,6 +31,7 @@ db_session = scoped_session(SessionLocal)
 Base = declarative_base()
 Base.query = db_session.query_property()
 
+# Зависимость для FastAPI
 def get_database():
     """
     Получить сессию базы данных.

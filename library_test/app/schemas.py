@@ -62,9 +62,9 @@ class BorrowBase(BaseModel):
     reader_id: int
 
 class Borrow(BorrowBase):
-    borrow_date: datetime.date
-    return_date: Optional[datetime.date] = None
-    return_date: Optional[str] = None
+    id: int
+    borrow_date: datetime.datetime
+    return_date: Optional[datetime.datetime] = None
     
     model_config = ConfigDict(from_attributes=True)
 

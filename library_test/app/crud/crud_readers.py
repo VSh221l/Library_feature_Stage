@@ -40,7 +40,7 @@ def update_reader(db: Session, reader_id: int, reader_update: schemas.ReaderUpda
             raise HTTPException(status_code=400, detail="Email уже занят")
     
     # Обновление полей
-    for field, value in reader_update.dict(exclude_unset=True).items():
+    for field, value in reader_update.model_dump(exclude_unset=True).items():
         setattr(db_reader, field, value)
     
     db.commit()

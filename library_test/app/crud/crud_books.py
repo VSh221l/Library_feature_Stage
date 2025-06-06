@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from app import schemas, models
 from fastapi import HTTPException
 import datetime
+import logging
 
 def create_book(db: Session, book: schemas.BookCreate):
     """Создать новую книгу"""
@@ -11,14 +12,20 @@ def create_book(db: Session, book: schemas.BookCreate):
         if db_book:
             raise HTTPException(status_code=400, detail="ISBN уже занят")
     
+    if book.quantity and book.quantity < 0:
+        raise HTTPException(status_code=400, detail="Количество не может быть отрицательным")
+    
+
     db_book = Book(
         title=book.title,
         author=book.author,
         year=book.year,
         isbn=book.isbn,
-        quantity=max(book.quantity, 0)  # Гарантируем неотрицательное значение
+        quantity=max(book.quantity, 0),  # Гарантируем неотрицательное значение
     )
+
     db.add(db_book)
+    
     db.commit()
     db.refresh(db_book)
     return db_book
@@ -38,21 +45,12 @@ def get_book_by_isbn(db: Session, isbn: str):
 def update_book(db: Session, book_id: int, book_update: schemas.BookUpdate):
     """Обновить данные книги"""
     db_book = get_book(db, book_id)
-    if not db_book:
-        raise HTTPException(status_code=404, detail="Книга не найдена")
-    
-    # Проверка уникальности ISBN, если он изменен
-    if book_update.isbn and book_update.isbn != db_book.isbn:
-        existing = get_book_by_isbn(db, book_update.isbn)
-        if existing:
-            raise HTTPException(status_code=400, detail="ISBN уже занят")
-    
-    # Обновление полей
     for field, value in book_update.model_dump(exclude_unset=True).items():
-        if field == "quantity" and value < 0:
-            raise HTTPException(status_code=400, detail="Количество не может быть отрицательным")
+        if field == "isbn":
+            existing = get_book_by_isbn(db, value)
+            if existing: # Проверяем уникальность ISBN и запрещаем обновление, если ISBN уже занят
+                raise HTTPException(status_code=400, detail="ISBN уже занят")
         setattr(db_book, field, value)
-    
     db.commit()
     db.refresh(db_book)
     return db_book
@@ -76,6 +74,7 @@ def check_book_availability(db: Session, book_id: int):
 
 def borrow_book(db: Session, borrow: schemas.BorrowCreate):
     """Выдать книгу читателю"""
+
     book = check_book_availability(db, borrow.book_id)
     
     reader_borrow_count = db.query(BorrowedBook).filter(
@@ -83,27 +82,33 @@ def borrow_book(db: Session, borrow: schemas.BorrowCreate):
         BorrowedBook.return_date.is_(None)
     ).count()
     if reader_borrow_count >= 3:
-        raise HTTPException(status_code=400, detail="Читатель уже взял максимальное количество книг")
+        raise HTTPException(status_code=400, detail="Превышено максимальное количество книг")
+
     
+
     book.quantity -= 1
+    db.commit()
+    db.refresh(book)
+    
     borrow_record = BorrowedBook(**borrow.model_dump())
     db.add(borrow_record)
     db.commit()
     db.refresh(borrow_record)
+
     return borrow_record
 
 def return_book(db: Session, borrow_id: int):
-    borrow_record = db.query(BorrowedBook).get(borrow_id)
+    borrow_record = db.get(BorrowedBook, borrow_id)
     if not borrow_record or borrow_record.return_date:
         raise HTTPException(status_code=400, detail="Книга уже возвращена или запись не найдена")
     
     borrow_record.return_date = datetime.datetime.now(datetime.timezone.utc)
-    book = db.query(Book).get(borrow_record.book_id)
+    book = db.get(Book, borrow_record.book_id)
     book.quantity += 1
     
     db.commit()
     db.refresh(borrow_record)
-    return borrow_record
+    return {"message": "Книга успешно возвращена"}
 
 def get_reader_borrowed_books(db: Session, reader_id: int):
     """Получить список книг, взятых читателем"""

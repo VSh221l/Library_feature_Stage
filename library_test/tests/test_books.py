@@ -1,5 +1,8 @@
-def test_create_book(client):
-    token = client.post("/auth/token", json={"email": "test@example.com", "password": "password123"}).json()["access_token"]
+def test_create_book(client, create_test_user):
+    response = client.post("/auth/token", json={"email": "test@example.com", "password": "password123"})
+    assert response.status_code == 200, "Failed to authenticate"
+    token = response.json().get("access_token")
+    assert token is not None, "Authentication failed: access_token not returned"
     headers = {"Authorization": f"Bearer {token}"}
 
     # Успешное создание
@@ -20,11 +23,13 @@ def test_create_book(client):
     assert response.status_code == 400
     assert response.json()["detail"] == "Количество не может быть отрицательным"
 
-def test_get_books_unprotected(client):
-    response = client.get("/books/")
+def test_get_books_unprotected(client, create_test_book, create_test_user):
+    token = client.post("/auth/token", json={"email": "test@example.com", "password": "password123"}).json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+    response = client.get("/books/", headers=headers)
     assert response.status_code == 200
 
-def test_update_book(client, create_test_book):
+def test_update_book(client, create_test_book, create_test_user):
     token = client.post("/auth/token", json={"email": "test@example.com", "password": "password123"}).json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
@@ -33,13 +38,13 @@ def test_update_book(client, create_test_book):
     assert response.json()["title"] == "Обновленная книга"
 
     # Попытка использовать занятый ISBN
-    response = client.post("/books/", json={"title": "Книга 2", "author": "Автор", "isbn": "123-456"}, headers=headers)
+    response = client.post("/books/", json={"title": "Книга 2", "author": "Автор", "isbn": "123-654"}, headers=headers)
     assert response.status_code == 201
-    response = client.put(f"/books/{response.json()['id']}", json={"isbn": "123-456"}, headers=headers)
+    response = client.put(f"/books/{response.json()['id']}", json={"isbn": "123-654"}, headers=headers)
     assert response.status_code == 400
     assert "ISBN уже занят" in response.json()["detail"]
 
-def test_delete_book(client, create_test_book):
+def test_delete_book(client,create_test_book, create_test_user):
     token = client.post("/auth/token", json={"email": "test@example.com", "password": "password123"}).json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
     

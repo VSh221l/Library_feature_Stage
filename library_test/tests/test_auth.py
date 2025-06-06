@@ -1,6 +1,6 @@
-def test_register_user(client, db):
+def test_register_user(client):
     response = client.post("/auth/register", json={"email": "new_user@example.com", "password": "password123"})
-    assert response.status_code == 201
+    assert response.status_code == 201, f"Failed to register user: {response.json()}"
     assert response.json() == {"message": "Пользователь успешно зарегистрирован"}
 
 def test_register_duplicate_email(client, create_test_user):
@@ -13,7 +13,7 @@ def test_login_success(client, create_test_user):
     assert response.status_code == 200
     assert "access_token" in response.json()
 
-def test_login_invalid_credentials(client):
+def test_login_invalid_credentials(client, create_test_user):
     response = client.post("/auth/token", json={"email": "wrong@example.com", "password": "wrongpass"})
     assert response.status_code == 401
     assert response.json() == {"detail": "Неверный email или пароль"}

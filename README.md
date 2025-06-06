@@ -20,12 +20,13 @@
 6. Запустите сервер: `uvicorn app.main:app --reload`
 
 ## Регистрация первого пользователя:
-```curl -X POST "http://localhost:8000/auth/register" \
-     -H "Content-Type: application/json" \
-     -d '{"email": "admin@example.com", "password": "admin123"}'
+`curl -X POST "http://localhost:8000/auth/register" \
+`     -H "Content-Type: application/json" \
+`     -d '{"email": "admin@example.com", "password": "admin123"}'
 
 ## Структура проекта
-```
+
+`
 library_api/
 ├── alembic/                # Database migrations
 ├── app/
